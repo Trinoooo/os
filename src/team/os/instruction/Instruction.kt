@@ -1,6 +1,5 @@
 package team.os.instruction
 
-import team.os.io.IOFacility
 import team.os.process.Process.PCB
 
 /**
@@ -71,9 +70,9 @@ sealed class Instruction(protected val pcb: PCB, protected val gb: GlobalModules
     class HwAccess(pcb: PCB, gb: GlobalModules, val name: String, val size: Int) : Instruction(pcb, gb) {
         override fun invoke() {
             val result = gb.io.IOFacilityRequest(name, size)
-            val num=result[0]
-            val time=result[1]
-            gb.tmpIntMap[name]=num
+            val num = result[0]
+            val time = result[1]
+            gb.tmpIntMap[name] = num
             TODO("阻塞进程，时间为time个周期")
         }
     }
@@ -86,7 +85,7 @@ sealed class Instruction(protected val pcb: PCB, protected val gb: GlobalModules
      */
     class HwRelease(pcb: PCB, gb: GlobalModules, val name: String) : Instruction(pcb, gb) {
         override fun invoke() {
-            gb.io.IOFacilityRelease(name,gb.tmpIntMap[name]?:-1)
+            gb.io.IOFacilityRelease(name, gb.tmpIntMap[name] ?: -1)
         }
     }
 
@@ -102,7 +101,7 @@ sealed class Instruction(protected val pcb: PCB, protected val gb: GlobalModules
         Instruction(pcb, gb) {
         override fun invoke() {
             gb.mm.varDeclare(pcb.pid, type, size).let {
-                gb.variables[name]=it
+                gb.variables[name] = it
             }
         }
     }
@@ -119,19 +118,14 @@ sealed class Instruction(protected val pcb: PCB, protected val gb: GlobalModules
     class VarPrint(pcb: PCB, gb: GlobalModules, val name: String, val type: String, val out: Boolean = true) :
         Instruction(pcb, gb) {
         override fun invoke() {
-            gb.mm.run {
-                when (type) {
-                    "String" -> {
-                        gb.tmpStrMap[name]=varReadString(gb.variables[name]?:-1)
-                    }
-                    "Int" -> {
-                        gb.tmpIntMap[name]=varReadInt(gb.variables[name]?:-1)
-                    }
-                    else -> {
-                        throw Exception("Invalid varPrint type!")
+            if (name[0] != '$')
+                gb.mm.run {
+                    when (type) {
+                        "String" -> gb.tmpStrMap[name] = varReadString(gb.variables[name] ?: -1)
+                        "Int" -> gb.tmpIntMap[name] = varReadInt(gb.variables[name] ?: -1)
+                        else -> throw Exception("Invalid varPrint type!")
                     }
                 }
-            }
             if (out) TODO("GUI PRINT")
         }
     }
@@ -145,10 +139,10 @@ sealed class Instruction(protected val pcb: PCB, protected val gb: GlobalModules
      */
     class VarWrite(pcb: PCB, gb: GlobalModules, val name: String, val value: String) : Instruction(pcb, gb) {
         override fun invoke() {
-            if(value[0]=='$'){
-                gb.mm.varWriteInt(gb.variables[name]?:-1,value.slice(1 until value.length).toInt())
-            }else{
-                gb.mm.varWriteString(gb.variables[name]?:-1,value)
+            if (value[0] == '$') {
+                gb.mm.varWriteInt(gb.variables[name] ?: -1, value.slice(1 until value.length).toInt())
+            } else {
+                gb.mm.varWriteString(gb.variables[name] ?: -1, value)
             }
         }
     }
@@ -162,9 +156,9 @@ sealed class Instruction(protected val pcb: PCB, protected val gb: GlobalModules
      */
     class Add(pcb: PCB, gb: GlobalModules, val o1: String, val o2: String) : Instruction(pcb, gb) {
         override fun invoke() {
-            VarPrint(pcb,gb,o1,"Int",false)()
-            VarPrint(pcb,gb,o2,"Int",false)()
-            gb.tmpIntMap["\$result"]=(gb.tmpIntMap[o1]?:-1)+(gb.tmpIntMap[o2]?:-1)
+            VarPrint(pcb, gb, o1, "Int", false)()
+            VarPrint(pcb, gb, o2, "Int", false)()
+            gb.tmpIntMap["\$result"] = (gb.tmpIntMap[o1] ?: -1) + (gb.tmpIntMap[o2] ?: -1)
         }
     }
 
@@ -179,7 +173,7 @@ sealed class Instruction(protected val pcb: PCB, protected val gb: GlobalModules
     class StrCat(pcb: PCB, gb: GlobalModules, val o1: String, val addition: String) : Instruction(pcb, gb) {
         override fun invoke() {
             VarPrint(pcb, gb, o1, "String", false)()
-            val r = (gb.tmpStrMap[o1]?:"") + addition
+            val r = (gb.tmpStrMap[o1] ?: "") + addition
             VarWrite(pcb, gb, o1, r)()
         }
     }
@@ -238,14 +232,14 @@ sealed class Instruction(protected val pcb: PCB, protected val gb: GlobalModules
         override fun invoke() {
             gb.fs.run {
                 val h = fileOpen(name)
-                val r=ByteArray(size+1)
-                val s=fileRead(h, r,size)
+                val r = ByteArray(size + 1)
+                val s = fileRead(h, r, size)
                 fileClose(h)
-                val sb=StringBuilder()
-                for(i in 0 until s){
+                val sb = StringBuilder()
+                for (i in 0 until s) {
                     sb.append(r[i])
                 }
-                gb.tmpStrMap["\$result"]=sb.toString()
+                gb.tmpStrMap["\$result"] = sb.toString()
             }
         }
     }
@@ -258,7 +252,10 @@ sealed class Instruction(protected val pcb: PCB, protected val gb: GlobalModules
      */
     class Broker(pcb: PCB, gb: GlobalModules) : Instruction(pcb, gb) {
         override fun invoke() {
-            TODO("GUI")
+            val str:String by lazy { // TODO: get from GUI
+                ""
+            }
+            InstructionSet.getIns(str,pcb,gb)()
         }
     }
 

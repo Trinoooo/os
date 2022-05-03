@@ -27,40 +27,43 @@ class InstructionSet(private val fileName: String?, private val pcb: PCB, privat
         }
         if (instructions.size == 0) instructions.add("Exit")
         for (i in 0 until instructions.size) {
-            list.add(getIns(instructions[i]))
+            list.add(getIns(instructions[i], this.pcb, this.gb))
         }
     }
 
-    /**
-     * 解析单条指令
-     *
-     * @param insString 指令串
-     * @param pcb 默认使用私有属性pcb
-     * @param gb 默认使用私有属性gb
-     * @return 指令类
-     */
-    private fun getIns(insString: String, pcb: PCB = this.pcb, gb: GlobalModules = this.gb): Instruction =
-        insString.split(" ").let {
-            when (it[0]) {
-                "CreateProcess" -> CreateProcess(pcb, gb, it[1])
-                "KillProcess" -> KillProcess(pcb, gb, it[1].toInt())
-                "CreateMutex" -> CreateMutex(pcb, gb, it[1])
-                "ReleaseMutex" -> ReleaseMutex(pcb, gb, it[1])
-                "HwAccess" -> HwAccess(pcb, gb, it[1], it[2].toInt())
-                "HwRelease" -> HwRelease(pcb, gb, it[1])
-                "VarDeclare" -> VarDeclare(pcb, gb, it[1], it[2], it[3].toInt())
-                "VarPrint" -> VarPrint(pcb, gb, it[1], it[2])
-                "VarWrite" -> VarWrite(pcb, gb, it[1], it[2])
-                "Add" -> Add(pcb, gb, it[1], it[2])
-                "StrCat" -> StrCat(pcb, gb, it[1], it[2])
-                "FileCreate" -> FileCreate(pcb, gb, it[1])
-                "FileWrite" -> FileWrite(pcb, gb, it[1], it[2])
-                "FileDelete" -> FileDelete(pcb, gb, it[1])
-                "FileRead" -> FileRead(pcb, gb, it[1], it[2].toInt())
-                "Broker" -> Broker(pcb, gb)
-                else -> Exit(pcb, gb)
+
+    companion object {
+        /**
+         * 解析单条指令
+         *
+         * @param insString 指令串
+         * @param pcb 默认使用私有属性pcb
+         * @param gb 默认使用私有属性gb
+         * @return 指令类
+         */
+        fun getIns(insString: String, pcb: PCB, gb: GlobalModules): Instruction =
+            insString.split(" ").let {
+                when (it[0]) {
+                    "CreateProcess" -> CreateProcess(pcb, gb, it[1])
+                    "KillProcess" -> KillProcess(pcb, gb, it[1].toInt())
+                    "CreateMutex" -> CreateMutex(pcb, gb, it[1])
+                    "ReleaseMutex" -> ReleaseMutex(pcb, gb, it[1])
+                    "HwAccess" -> HwAccess(pcb, gb, it[1], it[2].toInt())
+                    "HwRelease" -> HwRelease(pcb, gb, it[1])
+                    "VarDeclare" -> VarDeclare(pcb, gb, it[1], it[2], it[3].toInt())
+                    "VarPrint" -> VarPrint(pcb, gb, it[1], it[2])
+                    "VarWrite" -> VarWrite(pcb, gb, it[1], it[2])
+                    "Add" -> Add(pcb, gb, it[1], it[2])
+                    "StrCat" -> StrCat(pcb, gb, it[1], it[2])
+                    "FileCreate" -> FileCreate(pcb, gb, it[1])
+                    "FileWrite" -> FileWrite(pcb, gb, it[1], it[2])
+                    "FileDelete" -> FileDelete(pcb, gb, it[1])
+                    "FileRead" -> FileRead(pcb, gb, it[1], it[2].toInt())
+                    "Broker" -> Broker(pcb, gb)
+                    else -> Exit(pcb, gb)
+                }
             }
-        }
+    }
 
 
     /**
